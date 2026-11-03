@@ -79,6 +79,12 @@ select.txt{padding:8px 10px;font-size:15px;border-radius:10px;border:1px solid v
 .hero{text-align:center;margin-bottom:14px}
 .hero p{max-width:640px;margin:8px auto 0;color:var(--muted)}
 .atom{width:84px;height:84px;margin:0 auto 6px;display:block}
+.nickPrev{text-align:center;font-size:20px;margin:4px 0 8px;min-height:28px}
+.nickPrev b{color:var(--cyan)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.chipb{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:8px 12px;font-size:15px;cursor:pointer;touch-action:manipulation}
+.chipb:hover{border-color:var(--cyan)}
+.chipb.sel{background:#0f4a66;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(53,224,255,.25) inset;font-weight:700}
 .resume{border:1px dashed var(--gold);border-radius:12px;padding:12px;margin-bottom:14px;background:rgba(255,209,102,.06)}
 .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:14px}
 .rule{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;color:var(--muted)}
@@ -343,13 +349,16 @@ body.dash .hud{display:none}
       <button class="btn" onclick="window.pickSub('1')">Підгрупа 1</button>
       <button class="btn" onclick="window.pickSub('2')">Підгрупа 2</button>
     </div>
-    <h3>3. Кібер-Позивний</h3>
-    <div class="row" style="flex-wrap:nowrap">
-      <input class="txt" id="nickIn" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="Напр. ПіксельНіндзя" oninput="window.nickInput()">
-      <button class="btn" style="flex:0 0 auto" onclick="window.randomNick()">🎲 Нік</button>
+    <h3>3. Збери свій Кібер-Позивний</h3>
+    <div class="nickPrev" id="nickPrev">Обери по одному слову з кожного ряду 👇</div>
+    <div class="note">Частина 1</div>
+    <div class="chips" id="nickP"></div>
+    <div class="note">Частина 2</div>
+    <div class="chips" id="nickN"></div>
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button class="btn sm" onclick="window.randomNick()">🎲 Випадковий позивний</button>
     </div>
-    <div class="note">Без пробілів, без справжнього імені. До ніка додасться тег сесії, напр. <b>#42</b>.</div>
+    <div class="note" style="text-align:center">До позивного додасться тег сесії, напр. <b>#42</b> — запам’ятай його!</div>
     <div class="err" id="startErr"></div>
     <button class="btn primary wide" style="margin-top:6px;font-size:18px" onclick="window.startGame()">🚀 Старт квесту</button>
 
@@ -733,51 +742,41 @@ var MOCK = (function () {
 })();
 
 /* =====================================================================
-   НІКНЕЙМИ: генератор + анти-мат фільтр
+   КОНСТРУКТОР ПОЗИВНОГО: лише слова зі списків, власне введення вимкнено.
+   ⚠️ Ці самі списки є в Code.gs (NICK_P / NICK_N) — сервер приймає лише такі ніки.
+   Змінюючи слова тут, змініть їх і там.
    ===================================================================== */
-var NICK_ADJ = ['Квантовий', 'Неоновий', 'Цифровий', 'Лазерний', 'Пікселевий', 'Зоряний', 'Турбо', 'Нейро', 'Плазмовий',
-  'Титановий', 'Космічний', 'Бінарний', 'Голографічний', 'Іонний', 'Хмарний', 'Магнітний', 'Сонячний', 'Крижаний'];
-var NICK_NOUN = ['Самурай', 'Дракон', 'Фенікс', 'Хакер', 'Кодер', 'Страж', 'Вовк', 'Тигр', 'Сокіл', 'Робот', 'Пілот',
-  'Маг', 'Лицар', 'Мандрівник', 'Детектив', 'Інженер', 'Кіборг', 'Ніндзя', 'Пірат', 'Капітан', 'Байт', 'Процесор'];
-function makeNickBase() { return pick(NICK_ADJ) + pick(NICK_NOUN); }
+var NICK_P = ['Кібер', 'Нео', 'Турбо', 'Нано', 'Мега', 'Гіпер', 'Астро', 'Техно',
+  'Квант', 'Піксель', 'Лазер', 'Плазма', 'Неон', 'Крипто', 'Робо', 'Еко'];
+var NICK_N = ['Сокіл', 'Лисиця', 'Дракон', 'Сова', 'Фенікс', 'Пантера', 'Тигр', 'Комета',
+  'Пілот', 'Ракета', 'Кодер', 'Зірка', 'Вовк', 'Блискавка', 'Капітан', 'Дельфін',
+  'Ніндзя', 'Самурай', 'Детектив', 'Інженер', 'Мандрівник', 'Кіт', 'Панда', 'Єнот'];
+function makeNickBase() { return pick(NICK_P) + pick(NICK_N); }
 
-var BAD_ROOTS = ['хуй', 'хуя', 'хує', 'хуе', 'хуї', 'пизд', 'пізд', 'бля', 'єба', 'ёба', 'йоб', 'ебат', 'заеб', 'уеба', 'єбл',
-  'сука', 'суки', 'сучк', 'мудак', 'мудил', 'підар', 'пiдар', 'пидар', 'пидор', 'підор', 'педик', 'гандон', 'гондон',
-  'шлюх', 'дебіл', 'дебил', 'дурак', 'дурень', 'ідіот', 'идиот', 'лох', 'чмо', 'срак', 'сран', 'гівн', 'говн', 'жоп',
-  'залуп', 'манда', 'дрочи', 'член', 'секс', 'порн', 'нацист', 'гітлер', 'гитлер', 'рашист', 'вбивц', 'убийц', 'смерт',
-  'fuck', 'fuk', 'shit', 'bitch', 'dick', 'cock', 'pussy', 'porn', 'sex', 'nigg', 'nazi', 'hitler', 'whore', 'slut', 'cunt', 'asshole', 'bastard'];
-var LOOKALIKE = { a: 'а', b: 'в', c: 'с', e: 'е', h: 'н', i: 'і', k: 'к', m: 'м', o: 'о', p: 'р', t: 'т', x: 'х', y: 'у',
-  '0': 'о', '3': 'з', '4': 'ч', '6': 'б', '@': 'а', 'ё': 'е', 'ы': 'и' };
-function isBadNick(s) {
-  var low = s.toLowerCase().replace(/[_\-.]/g, '');
-  var cyr = low.replace(/./g, function (ch) { return LOOKALIKE[ch] || ch; }).replace(/[іїi]/g, 'і');
-  var lat = low.replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/5/g, 's').replace(/@/g, 'a').replace(/\$/g, 's');
-  for (var i = 0; i < BAD_ROOTS.length; i++) {
-    var r = BAD_ROOTS[i].replace(/[іїi]/g, 'і');
-    if (cyr.indexOf(r) >= 0 || lat.indexOf(BAD_ROOTS[i]) >= 0) return true;
-  }
-  return false;
+function renderNickChips() {
+  $('nickP').innerHTML = NICK_P.map(function (w, i) {
+    return '<button class="chipb' + (SEL.np === i ? ' sel' : '') + '" onclick="window.pickNickPart(\'p\',' + i + ')">' + w + '</button>';
+  }).join('');
+  $('nickN').innerHTML = NICK_N.map(function (w, i) {
+    return '<button class="chipb' + (SEL.nn === i ? ' sel' : '') + '" onclick="window.pickNickPart(\'n\',' + i + ')">' + w + '</button>';
+  }).join('');
+  var p = SEL.np >= 0 ? NICK_P[SEL.np] : '…', n = SEL.nn >= 0 ? NICK_N[SEL.nn] : '…';
+  $('nickPrev').innerHTML = (SEL.np >= 0 || SEL.nn >= 0)
+    ? 'Твій позивний: <b>' + p + n + '</b><span class="muted">#??</span>'
+    : 'Обери по одному слову з кожного ряду 👇';
 }
-function validateNick(s) {
-  if (!s) return 'Введи кібер-позивний або натисни «🎲 Нік».';
-  if (/\s/.test(s)) return 'Пробіли заборонені.';
-  if (s.length < 3) return 'Мінімум 3 символи.';
-  if (!/^[A-Za-zА-ЩЬЮЯҐЄІЇа-щьюяґєії0-9_\-]+$/.test(s)) return 'Лише літери, цифри, _ та -.';
-  if (isBadNick(s)) return '⛔ Цей позивний не пройшов кібер-фільтр. Обери інший!';
-  return '';
-}
-window.nickInput = function () {
-  var el = $('nickIn');
-  var v = el.value.replace(/\s+/g, '');
-  if (v !== el.value) el.value = v;
-  $('startErr').textContent = v ? validateNick(v) : '';
+window.pickNickPart = function (part, i) {
+  sfx.click();
+  if (part === 'p') SEL.np = i; else SEL.nn = i;
+  $('startErr').textContent = '';
+  renderNickChips();
 };
 window.randomNick = function () {
   sfx.click();
-  var n;
-  do { n = makeNickBase(); } while (n.length > 24);
-  $('nickIn').value = n;
+  SEL.np = rnd(0, NICK_P.length - 1);
+  SEL.nn = rnd(0, NICK_N.length - 1);
   $('startErr').textContent = '';
+  renderNickChips();
 };
 
 /* =====================================================================
@@ -786,7 +785,7 @@ window.randomNick = function () {
 var S = null;          // поточна сесія учня (зберігається в localStorage)
 var CUR = null;        // дані поточної місії
 var SCREEN = 'start';
-var SEL = { cls: '', sub: '' };
+var SEL = { cls: '', sub: '', np: -1, nn: -1 };
 var TEST = { on: false };
 var TEACHER_PW = '';
 var lastTick = 0, tickN = 0, busy = false;
@@ -857,16 +856,15 @@ window.pickSub = function (s) {
 window.startGame = function () {
   var err = '';
   if (!SEL.cls) err = 'Обери свій клас.';
-  else if (!SEL.sub) err = 'Обери підгрупу.';
-  else err = validateNick($('nickIn').value.trim());
+  else if (!(SEL.np >= 0) || !(SEL.nn >= 0)) err = 'Збери позивний: обери слово з кожного ряду або натисни 🎲.';
   $('startErr').textContent = err;
   if (err) { sfx.err(); return; }
   S = {
     v: 1,
     sid: 'S' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
     cls: SEL.cls, sub: SEL.sub,
-    nick: $('nickIn').value.trim() + '#' + rnd(10, 99),
-    mi: 0, done: 0, clean: 0, errors: 0, pen: 0, curErr: 0, track: '',
+    nick: NICK_P[SEL.np] + NICK_N[SEL.nn] + '#' + rnd(10, 99),
+    mi: 0, done: 0, clean: 0, errors: 0, pen: 0, curErr: 0, track: '', mErr: [],
     quiz: 0, quizAt: 0, quizAnswered: 0, qSet: pickQuizSet(),
     elapsed: 0, finished: false, isTest: TEST.on, final: null, pin: ''
   };
@@ -892,9 +890,9 @@ window.newStudent = function () {
   stopCamera();
   lsDel('cmq_state');
   S = null; CUR = null;
-  $('nickIn').value = '';
   $('startErr').textContent = '';
-  SEL = { cls: '', sub: '' };
+  SEL = { cls: '', sub: '', np: -1, nn: -1 };
+  renderNickChips();
   Array.prototype.forEach.call(document.querySelectorAll('#clsSeg .btn, #subSeg .btn'), function (b) { b.classList.remove('sel'); });
   $('resumeBox').classList.add('hidden');
   renderHUD();
@@ -944,6 +942,8 @@ function missionWin() {
   S.done++;
   if (clean) S.clean++;
   S.track = (S.track || '') + (clean ? 'C' : 'E');
+  S.mErr = S.mErr || [];
+  S.mErr[S.mi] = S.curErr;
   var passed = S.mi + 1;
   saveState();
   sfx.ok();
@@ -952,9 +952,16 @@ function missionWin() {
   var last = S.mi >= 7;
   sendQueued('updateProgress', {
     sid: S.sid, cls: S.cls, sub: S.sub, nick: S.nick, isTest: S.isTest,
-    mission: last ? 9 : passed + 1, passed: passed, done: S.done, clean: clean, xp: liveXP(), track: S.track
+    mission: last ? 9 : passed + 1, passed: passed, done: S.done, clean: clean, xp: liveXP(), track: S.track, errs: errsStr()
   });
   setTimeout(function () { startQuiz(passed); }, 1300);
+}
+
+/* Помилки по вимірах для таблиці, напр. "0,0,2,0,1,3,0,0" (- — вимір ще не пройдено). На бали не впливає. */
+function errsStr() {
+  var out = [];
+  for (var k = 0; k < 8; k++) out.push(S.mErr && S.mErr[k] !== undefined && S.mErr[k] !== null ? S.mErr[k] : '-');
+  return out.join(',');
 }
 
 function missionFail(msg) {
@@ -1678,7 +1685,7 @@ function finishGame() {
   saveState();
   sendQueued('submitResult', {
     sid: S.sid, cls: S.cls, sub: S.sub, nick: S.nick, isTest: S.isTest,
-    xp: S.final.xp, time: S.final.time, pin: S.pin, errors: S.errors, clean: S.clean, track: S.track || ''
+    xp: S.final.xp, time: S.final.time, pin: S.pin, errors: S.errors, clean: S.clean, track: S.track || '', errs: errsStr()
   });
   sfx.fanfare();
   showPassport();
@@ -1799,7 +1806,7 @@ window.testJump = function (i) {
   if (!S || S.finished) {
     S = {
       v: 1, sid: 'TEST-' + Date.now().toString(36), cls: $('tCls').value, sub: $('tSub').value,
-      nick: 'Тестувальник#' + rnd(10, 99), mi: 0, done: 0, clean: 0, errors: 0, pen: 0, curErr: 0, track: '',
+      nick: 'Тестувальник#' + rnd(10, 99), mi: 0, done: 0, clean: 0, errors: 0, pen: 0, curErr: 0, track: '', mErr: [],
       quiz: 0, quizAt: 0, quizAnswered: 0, qSet: pickQuizSet(),
       elapsed: 0, finished: false, isTest: true, final: null, pin: ''
     };
@@ -2100,6 +2107,7 @@ function drawQR(canvas, text) {
    ===================================================================== */
 window.initApp = function () {
   renderSoundBtn();
+  renderNickChips();
   renderResumeBox();
   renderHUD();
   showScreen('start');
